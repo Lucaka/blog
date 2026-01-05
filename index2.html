@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUINS // ARCHIVE</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* === 1. 核心配色 === */
+        :root {
+            /* 讓內容區的底色稍微帶點廢墟的灰黃色調 */
+            --text-main: #2b302b;
+            --text-sub: #5a605a;
+            --accent-moss: #5c6b5b;
+            /* 灰綠色 */
+            --accent-rust: #b56543;
+            /* 鐵鏽紅 */
+            --gold-dust: #d4af37;
+        }
+
+        /* === 2. 基礎設定 === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            cursor: none;
+        }
+
+        body {
+            background-color: #e1ded7;
+            /* 頁面底色，避免背景圖跑完變白 */
+            color: var(--text-main);
+            font-family: 'Space Mono', monospace;
+            overflow-x: hidden;
+            line-height: 1.8;
+            min-height: 250vh;
+            /* 確保足夠長度展示視差 */
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: 0.3s;
+        }
+
+        /* === 3. 廢墟視差背景 (Parallax Background) === */
+        #parallax-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 120vh;
+            /* 比視窗高，防止向上滾動時底部穿幫 */
+            z-index: -2;
+            will-change: transform;
+
+            /* 背景圖：更強調廢墟結構與光影 */
+            background-image: url('./public/background.png');
+            background-size: cover;
+            background-position: center center;
+        }
+
+        /* === 4. Canvas 金色塵埃 === */
+        #dust-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* === 5. 頁面佈局 === */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            /* 讓內容從畫面 45% 處開始，上方留白給廢墟背景 */
+            padding-top: 45vh;
+            padding-bottom: 100px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 頂部大標題 */
+        .hero-text {
+            text-align: center;
+            margin-bottom: 6rem;
+            position: relative;
+        }
+
+        .hero-text h1 {
+            font-size: clamp(3rem, 7vw, 6rem);
+            color: #fff;
+            /* 在深色廢墟背景上使用白色 */
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            letter-spacing: 4px;
+            font-weight: 400;
+        }
+
+        .hero-text .subtitle {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            color: #ddd;
+            padding: 5px 15px;
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            margin-top: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 內容網格 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
+        }
+
+        /* 文章卡片 */
+        .card {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 3rem 2rem;
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s;
+            position: relative;
+            backdrop-filter: blur(10px);
+            /* 微微的傾斜效果增加不穩定感 */
+            clip-path: polygon(0 0, 100% 0, 100% 98%, 95% 100%, 0 100%);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-rust);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-meta {
+            font-size: 0.7rem;
+            color: var(--accent-moss);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .card h2 {
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            line-height: 1.1;
+            color: var(--text-main);
+        }
+
+        .card p {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .card-link {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-rust);
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card-link::after {
+            content: '→';
+            transition: 0.3s;
+        }
+
+        .card-link:hover::after {
+            transform: translateX(5px);
+        }
+
+        /* === 6. 懸浮 GoToTop (右下角獨立) === */
+        #gototop {
+            position: fixed;
+            bottom: 3rem;
+            right: 3rem;
+            width: 50px;
+            height: 50px;
+            background: transparent;
+            border: 1px solid var(--accent-rust);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-rust);
+            cursor: pointer;
+            z-index: 100;
+            opacity: 0.6;
+            transition: 0.3s;
+        }
+
+        #gototop:hover {
+            opacity: 1;
+            background: var(--accent-rust);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* 簡單的底部文字 */
+        .simple-footer {
+            margin-top: 5rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            opacity: 0.7;
+        }
+
+        /* === 7. 游標 === */
+        #cursor-dot {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: #ffffff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10001;
+            mix-blend-mode: difference;
+        }
+
+        #cursor-ring {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ffffff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10000;
+            transition: width 0.2s, height 0.2s, top 0.1s, left 0.1s;
+            opacity: 0.5;
+            mix-blend-mode: difference;
+        }
+
+        /* RWD */
+        @media (max-width: 768px) {
+            .hero-text h1 {
+                font-size: 3rem;
+            }
+
+            #cursor-dot,
+            #cursor-ring {
+                display: none;
+            }
+
+            #gototop {
+                bottom: 1.5rem;
+                right: 1.5rem;
+            }
+
+            .main-container {
+                padding-top: 35vh;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 背景層：廢墟視差圖 -->
+    <div id="parallax-bg"></div>
+
+    <!-- 前景層：Canvas 金色塵埃 -->
+    <canvas id="dust-canvas"></canvas>
+
+    <!-- 游標 -->
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+
+    <!-- GoToTop 按鈕 -->
+    <div id="gototop">↑</div>
+
+    <!-- 主要內容 -->
+    <div class="main-container">
+
+        <div class="hero-text">
+            <h1>STRUCTURAL<br>DECAY</h1>
+            <span class="subtitle">SECTOR 09 // NO HUMAN CONTACT</span>
+        </div>
+
+        <div class="content-grid">
+            <!-- Article 01 -->
+            <article class="card">
+                <div class="card-meta">
+                    <span>Log_892</span>
+                    <span>10:00 AM</span>
+                </div>
+                <h2>The Great Hall</h2>
+                <p>The roof has completely collapsed. Light pours in like a physical substance, illuminating the dust
+                    motes dancing in the stagnant air. It is quiet, but heavy.</p>
+                <a href="#" class="card-link">READ_ENTRY</a>
+            </article>
+
+            <!-- Article 02 -->
+            <article class="card">
+                <div class="card-meta">
+                    <span>Observation</span>
+                    <span>Flora</span>
+                </div>
+                <h2>Concrete Roots</h2>
+                <p>We found trees growing directly out of the reinforced pillars. The roots are breaking the stone
+                    apart, slowly reclaiming the architecture.</p>
+                <a href="#" class="card-link">VIEW_IMAGES</a>
+            </article>
+
+            <!-- Article 03 -->
+            <article class="card">
+                <div class="card-meta">
+                    <span>Audio_File</span>
+                    <span>Corrupted</span>
+                </div>
+                <h2>Echoes of Industry</h2>
+                <p>Wind passing through the broken windows creates a whistling sound, almost like the machines are
+                    trying to start up again.</p>
+                <a href="#" class="card-link">PLAY_AUDIO</a>
+            </article>
+
+            <!-- Article 04 -->
+            <article class="card">
+                <div class="card-meta">
+                    <span>Status</span>
+                    <span>Stable</span>
+                </div>
+                <h2>Light Pollution</h2>
+                <p>There is no electricity, yet the moss in the basement emits a faint bioluminescence. Nature is
+                    creating its own power grid.</p>
+                <a href="#" class="card-link">ANALYZE</a>
+            </article>
+
+            <!-- Article 05 (填充用) -->
+            <article class="card">
+                <div class="card-meta">
+                    <span>Archive</span>
+                    <span>0% Decay</span>
+                </div>
+                <h2>The Vault</h2>
+                <p>Deep beneath the rubble, the airlock remains sealed. What lies inside has not seen the sun for two
+                    centuries.</p>
+                <a href="#" class="card-link">ACCESS_DENIED</a>
+            </article>
+        </div>
+
+        <div class="simple-footer">
+            <p>END OF TRANSMISSION // SYSTEM STANDBY</p>
+        </div>
+
+    </div>
+
+    <script>
+        // === 1. Canvas 金色塵埃 (Golden Dust) ===
+        const canvas = document.getElementById('dust-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+
+        // 增加粒子數量以配合廢墟的塵土感
+        const particleCount = 120;
+
+        class Particle {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * height; // 初始隨機分佈
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = height + 10;
+                this.speedY = Math.random() * 0.3 + 0.05; // 非常緩慢的漂浮
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.size = Math.random() * 2.5 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.1;
+                this.fadeSpeed = Math.random() * 0.003 + 0.001;
+                this.fadeDir = 1;
+            }
+
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+
+                // 閃爍
+                this.opacity += this.fadeSpeed * this.fadeDir;
+                if (this.opacity >= 0.7 || this.opacity <= 0.05) {
+                    this.fadeDir *= -1;
+                }
+
+                if (this.y < -10 || this.x > width + 10 || this.x < -10) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(212, 175, 55, ${this.opacity})`; // 金色
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+
+
+        // === 2. 視差滾動 (Parallax) - 負值邏輯 ===
+        const parallaxBg = document.getElementById('parallax-bg');
+
+        window.addEventListener('scroll', (event) => {
+            const scrollY = window.scrollY;
+
+            // 使用負值: 網頁向下捲，背景向上移動
+            // 係數 0.3 代表捲動速度為前景的 30%
+            const parallaxSpeed = 1;
+            const yOffset = scrollY * parallaxSpeed;
+
+
+            // 注意：因為是往上移，背景圖必須夠長，否則底部會露餡
+            // CSS 中已設定 height: 120vh 來緩衝
+            const scrollHeight = document.body.scrollHeight;
+            const yOffsetPercent = yOffset / (scrollHeight - window.innerHeight) * 100;
+            // parallaxBg.style.transform = `translate3d(0, ${yOffset}px, 0)`;
+            parallaxBg.style.backgroundPositionY = yOffsetPercent >= 100 ? '100%' : `${yOffsetPercent}%`;
+        });
+
+
+        // === 3. 游標與互動 ===
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorRing = document.getElementById('cursor-ring');
+
+        // 游標跟隨
+        document.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+
+            // 延遲效果
+            setTimeout(() => {
+                cursorRing.style.left = e.clientX + 'px';
+                cursorRing.style.top = e.clientY + 'px';
+            }, 80);
+        });
+
+        // 卡片懸停時放大游標
+        document.querySelectorAll('a, .card').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorRing.style.width = '60px';
+                cursorRing.style.height = '60px';
+                cursorRing.style.borderColor = 'var(--accent-rust)';
+                cursorRing.style.backgroundColor = 'rgba(181, 101, 67, 0.1)';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorRing.style.width = '40px';
+                cursorRing.style.height = '40px';
+                cursorRing.style.borderColor = 'var(--accent-rust)';
+                cursorRing.style.backgroundColor = 'transparent';
+            });
+        });
+
+        // GoToTop
+        document.getElementById('gototop').addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+    </script>
+</body>
+
+</html>
