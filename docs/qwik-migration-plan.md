@@ -5,15 +5,15 @@
 
 ## 1. 現況盤點
 
-| 項目 | 現況 |
-|---|---|
-| 伺服器 | `index.js` — Express 5，僅做靜態檔案服務（`/` 與 `/index2` 兩條路由） |
-| 頁面 | `index.html`（滑鼠視差版）、`index2.html`（捲動視差版），兩者 95% 相同 |
-| 樣式 | 全部內嵌在各 HTML 的 `<style>` 中，兩份幾乎重複 |
-| 互動 JS | 內嵌 `<script>`：金色塵埃 Canvas 粒子、視差背景、自訂游標、GoToTop |
-| 內容 | 5 張文章卡片硬寫在 HTML 裡（RUINS // ARCHIVE 主題） |
-| 資產 | `public/background.png`（**6.8 MB**，偏大）、Google Fonts（Cormorant Garamond、Space Mono） |
-| 工具鏈 | pnpm，無建置流程、無 TypeScript、無測試 |
+| 項目    | 現況                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------- |
+| 伺服器  | `index.js` — Express 5，僅做靜態檔案服務（`/` 與 `/index2` 兩條路由）                       |
+| 頁面    | `index.html`（滑鼠視差版）、`index2.html`（捲動視差版），兩者 95% 相同                      |
+| 樣式    | 全部內嵌在各 HTML 的 `<style>` 中，兩份幾乎重複                                             |
+| 互動 JS | 內嵌 `<script>`：金色塵埃 Canvas 粒子、視差背景、自訂游標、GoToTop                          |
+| 內容    | 5 張文章卡片硬寫在 HTML 裡（RUINS // ARCHIVE 主題）                                         |
+| 資產    | `public/background.png`（**6.8 MB**，偏大）、Google Fonts（Cormorant Garamond、Space Mono） |
+| 工具鏈  | pnpm，無建置流程、無 TypeScript、無測試                                                     |
 
 兩個頁面唯一的差異是視差背景的驅動方式（滑鼠 vs. 捲動）與少量 CSS，非常適合抽成同一個元件的兩種模式。
 
@@ -63,16 +63,16 @@ blog/
 
 ## 4. 元件拆解與 Qwik API 對應
 
-| 現有功能 | Qwik 實作方式 |
-|---|---|
-| 金色塵埃 Canvas（`requestAnimationFrame` 迴圈） | `<DustCanvas>` 元件，用 `useVisibleTask$` 啟動動畫迴圈，`cleanup()` 中 `cancelAnimationFrame`；resize 用 `useOnWindow('resize', $(...))` |
-| 滑鼠視差（`mousemove` + lerp 阻尼） | `<ParallaxBackground mode="mouse">`，`useOnDocument('mousemove', $(...))` 更新目標值，`useVisibleTask$` 跑 lerp 動畫迴圈 |
-| 捲動視差（`scroll` 更新 backgroundPositionY） | 同一元件 `mode="scroll"`，`useOnWindow('scroll', $(...))` |
-| 自訂游標（dot + ring、hover 放大） | `<CustomCursor>`，`useOnDocument('mousemove')` 跟隨；hover 放大改為監聽 `mouseover`/`mouseout` 事件委派（避免逐一綁定 `querySelectorAll`，也對動態內容更穩） |
-| GoToTop | `<GoToTop>`，`onClick$={() => window.scrollTo({ top: 0, behavior: 'smooth' })}` |
-| 文章卡片 × 5 | `articles.ts` 匯出陣列，頁面中 `articles.map(a => <ArticleCard {...a} />)` |
-| 內嵌 CSS | 共用部分進 `global.css`；元件專屬樣式用 `useStylesScoped$` 或 CSS Modules |
-| Google Fonts | `root.tsx` 的 `<head>` 保留 `<link>`（或改自架字型檔以減少外部請求） |
+| 現有功能                                        | Qwik 實作方式                                                                                                                                                |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 金色塵埃 Canvas（`requestAnimationFrame` 迴圈） | `<DustCanvas>` 元件，用 `useVisibleTask$` 啟動動畫迴圈，`cleanup()` 中 `cancelAnimationFrame`；resize 用 `useOnWindow('resize', $(...))`                     |
+| 滑鼠視差（`mousemove` + lerp 阻尼）             | `<ParallaxBackground mode="mouse">`，`useOnDocument('mousemove', $(...))` 更新目標值，`useVisibleTask$` 跑 lerp 動畫迴圈                                     |
+| 捲動視差（`scroll` 更新 backgroundPositionY）   | 同一元件 `mode="scroll"`，`useOnWindow('scroll', $(...))`                                                                                                    |
+| 自訂游標（dot + ring、hover 放大）              | `<CustomCursor>`，`useOnDocument('mousemove')` 跟隨；hover 放大改為監聽 `mouseover`/`mouseout` 事件委派（避免逐一綁定 `querySelectorAll`，也對動態內容更穩） |
+| GoToTop                                         | `<GoToTop>`，`onClick$={() => window.scrollTo({ top: 0, behavior: 'smooth' })}`                                                                              |
+| 文章卡片 × 5                                    | `articles.ts` 匯出陣列，頁面中 `articles.map(a => <ArticleCard {...a} />)`                                                                                   |
+| 內嵌 CSS                                        | 共用部分進 `global.css`；元件專屬樣式用 `useStylesScoped$` 或 CSS Modules                                                                                    |
+| Google Fonts                                    | `root.tsx` 的 `<head>` 保留 `<link>`（或改自架字型檔以減少外部請求）                                                                                         |
 
 Qwik 重點觀念：
 
@@ -83,21 +83,25 @@ Qwik 重點觀念：
 ## 5. 遷移步驟
 
 ### Phase 0 — 準備
+
 1. 壓縮 `background.png`：轉 WebP（品質 ~80）預估可從 6.8 MB 降到 <500 KB；同時準備行動版較小尺寸（`<picture>` 或 `image-set`）。
 2. 確認 Node 版本 ≥ 18（Qwik 需求）。
 
 ### Phase 1 — 建立骨架
+
 3. 在 repo 內以 `pnpm create qwik@latest`（empty/basic starter）初始化，合併 `package.json`。
 4. 移除 Express 依賴與 `index.js`；`start` script 改為 `vite`／`preview`。
 5. 設定 `root.tsx`（`lang="zh-TW"`、title、Google Fonts）、`global.css`（搬入 `:root` 配色變數與基礎樣式）。
 
 ### Phase 2 — 元件化
+
 6. 建立 `articles.ts` 資料檔（5 篇卡片的 meta/title/body/link）。
 7. 依序實作元件：`Hero` → `ArticleCard` → `Footer`（純靜態，先驗證 SSR 輸出）。
 8. 實作互動元件：`DustCanvas` → `ParallaxBackground`（兩種模式） → `CustomCursor` → `GoToTop`。
 9. 組出 `routes/layout.tsx` 與兩個頁面路由，對照原頁面逐一驗證視覺與行為。
 
 ### Phase 3 — 收尾
+
 10. 加上 `static adapter`，`pnpm build` 產出 SSG 靜態站。
 11. 補基本檢查：`tsc --noEmit`、ESLint（starter 內建 qwik plugin）、`pnpm preview` 手動驗證兩條路由。
 12. 更新 `README.md`（開發/建置/部署指令），刪除舊的 `index.html` / `index2.html`。
