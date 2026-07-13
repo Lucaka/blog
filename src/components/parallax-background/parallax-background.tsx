@@ -23,7 +23,6 @@ export const ParallaxBackground = component$<ParallaxBackgroundProps>(
       .parallax-bg {
         position: fixed;
         z-index: -2;
-        background-image: url('/background.webp');
         background-repeat: no-repeat;
       }
 
@@ -100,6 +99,16 @@ export const ParallaxBackground = component$<ParallaxBackgroundProps>(
       }
     });
 
-    return <div class={`parallax-bg ${mode}`} ref={bgRef} aria-hidden="true" />;
+    // 背景圖路徑跟隨 Vite base（GitHub Pages 子路徑部署時會是 /blog/background.webp）
+    return (
+      <div
+        class={`parallax-bg ${mode}`}
+        ref={bgRef}
+        aria-hidden="true"
+        style={{
+          backgroundImage: `url('${import.meta.env.BASE_URL}background.webp')`,
+        }}
+      />
+    );
   },
 );

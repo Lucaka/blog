@@ -12,7 +12,7 @@ export default extendConfig(baseConfig, () => {
     },
     plugins: [
       staticAdapter({
-        origin: "https://example.com",
+        origin: "https://lucaka.github.io",
       }),
     ],
   };

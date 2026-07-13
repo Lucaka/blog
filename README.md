@@ -46,6 +46,16 @@ src/
 └── root.tsx        # document <head>（字型、meta）
 ```
 
+## 部署（GitHub Pages）
+
+已內建 GitHub Actions 自動部署（`.github/workflows/deploy.yml`）：推到 `main` 分支即會建置並發佈到 GitHub Pages。
+
+一次性設定：Repo → **Settings → Pages → Source** 選擇 **「GitHub Actions」**。
+
+網站會發佈在 project page 子路徑 `https://lucaka.github.io/blog/`，因此 CI 建置時會帶入 `GITHUB_PAGES=true`，讓 Vite 的 `base` 切換為 `/blog/`（本機開發維持 `/`）。SSG 會把整站輸出到 `dist/blog/`，workflow 即上傳該子目錄。
+
+> 若日後改用自訂網域，或把 repo 改名為 `lucaka.github.io`（user page），base 應改回 `/`：移除 workflow 裡的 `GITHUB_PAGES` 環境變數並把上傳路徑改為 `dist` 即可。
+
 ## 備註
 
 - 背景圖已由 6.5 MB PNG 壓成 ~450 KB 的 `public/background.webp`。
