@@ -86,8 +86,10 @@ export const ParallaxBackground = component$<ParallaxBackgroundProps>(
         const onScroll = () => {
           const scrollY = window.scrollY;
           const scrollHeight = document.body.scrollHeight;
-          const yOffsetPercent =
-            (scrollY / (scrollHeight - window.innerHeight)) * 100;
+          const maxScroll = scrollHeight - window.innerHeight;
+          // 內容未超過視窗高度時沒有可捲動範圍，避免除以零產生 NaN%
+          if (maxScroll <= 0) return;
+          const yOffsetPercent = (scrollY / maxScroll) * 100;
           bg.style.backgroundPositionY =
             yOffsetPercent >= 100 ? "100%" : `${yOffsetPercent}%`;
         };

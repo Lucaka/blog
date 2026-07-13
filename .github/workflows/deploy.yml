@@ -7,11 +7,9 @@ on:
   # 也可在 Actions 頁面手動觸發
   workflow_dispatch:
 
-# GITHUB_TOKEN 權限：讀取內容、部署 Pages
+# 最小權限：workflow 層級只給讀取；Pages 部署權限只授予 deploy job
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # 同時只跑一個部署，且不取消進行中的正式部署
 concurrency:
@@ -24,6 +22,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # 後續步驟不做任何 git 操作，不需要保留 GITHUB_TOKEN
+          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -55,6 +56,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Pages 部署所需的權限只授予此 job
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
