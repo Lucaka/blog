@@ -27,11 +27,16 @@ export const ParallaxBackground = component$<ParallaxBackgroundProps>(
       }
 
       .parallax-bg.mouse {
-        top: -15vh;
-        left: -15vw;
-        width: 130vw;
-        height: 130vh;
-        background-size: 115%;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        /*
+         * 背景圖為 1:1。以視窗較長邊為基準放大，確保正方形圖在任何
+         * 長寬比（含 19.5:9~20:9 手機直式）都能同時覆蓋寬與高，
+         * 且四周留有可平移空間，滑鼠視差才有效果。
+         */
+        background-size: max(130vw, 130vh);
         background-position: center center;
         will-change: background-position;
       }
@@ -41,7 +46,11 @@ export const ParallaxBackground = component$<ParallaxBackgroundProps>(
         left: 0;
         width: 100%;
         height: 120vh; /* 比視窗高，防止向上滾動時底部穿幫 */
-        background-size: cover;
+        /*
+         * 同理，正方形圖需高於容器才有垂直平移空間；以較長邊放大並
+         * 確保高度大於容器（120vh），捲動視差在窄長手機上也有效。
+         */
+        background-size: max(100vw, 130vh);
         background-position: center center;
         will-change: background-position;
       }
