@@ -70,9 +70,31 @@ export const ParallaxBackground = component$<ParallaxBackgroundProps>(
         let targetY = 50;
         const damping = 0.01; // 阻尼係數
 
+        // 桌機：滑鼠移動驅動
         const onMouseMove = (e: MouseEvent) => {
           targetX = (e.clientX / window.innerWidth) * 100;
           targetY = (e.clientY / window.innerHeight) * 100;
+        };
+
+        // 手機：陀螺儀（裝置傾斜）驅動。
+        // 以第一次事件的角度為中立點，之後相對傾斜 ±TILT_RANGE 度映射到 0~100%，
+        // 不假設使用者持機角度，任何拿法都以「當下」為畫面中心。
+        const TILT_RANGE = 30;
+        let baseGamma: number | null = null;
+        let baseBeta: number | null = null;
+        const clamp = (v: number, min: number, max: number) =>
+          Math.min(max, Math.max(min, v));
+        const onOrientation = (e: DeviceOrientationEvent) => {
+          const gamma = e.gamma ?? 0; // 左右傾斜
+          const beta = e.beta ?? 0; // 前後傾斜
+          if (baseGamma === null || baseBeta === null) {
+            baseGamma = gamma;
+            baseBeta = beta;
+          }
+          const dg = clamp(gamma - baseGamma, -TILT_RANGE, TILT_RANGE);
+          const db = clamp(beta - baseBeta, -TILT_RANGE, TILT_RANGE);
+          targetX = ((dg + TILT_RANGE) / (TILT_RANGE * 2)) * 100;
+          targetY = ((db + TILT_RANGE) / (TILT_RANGE * 2)) * 100;
         };
 
         let rafId = 0;
@@ -85,11 +107,51 @@ export const ParallaxBackground = component$<ParallaxBackgroundProps>(
         };
 
         document.addEventListener("mousemove", onMouseMove);
+
+        // 陀螺儀：iOS 13+ 需在使用者手勢中呼叫 requestPermission()。
+        type DOEStatic = typeof DeviceOrientationEvent & {
+          requestPermission?: () => Promise<PermissionState>;
+        };
+        let gyroAttached = false;
+        const attachGyro = () => {
+          if (gyroAttached) return;
+          gyroAttached = true;
+          window.addEventListener("deviceorientation", onOrientation);
+        };
+        let enableGyroOnGesture: (() => void) | null = null;
+        if (typeof window.DeviceOrientationEvent !== "undefined") {
+          const DOE = window.DeviceOrientationEvent as DOEStatic;
+          if (typeof DOE.requestPermission === "function") {
+            // iOS：等第一次點擊/觸控再要求權限並掛上監聽
+            enableGyroOnGesture = () => {
+              DOE.requestPermission?.()
+                .then((state) => {
+                  if (state === "granted") attachGyro();
+                })
+                .catch(() => {});
+            };
+            window.addEventListener("touchend", enableGyroOnGesture, {
+              once: true,
+            });
+            window.addEventListener("click", enableGyroOnGesture, {
+              once: true,
+            });
+          } else {
+            // Android 等：不需權限，直接掛上
+            attachGyro();
+          }
+        }
+
         loop();
 
         cleanup(() => {
           cancelAnimationFrame(rafId);
           document.removeEventListener("mousemove", onMouseMove);
+          window.removeEventListener("deviceorientation", onOrientation);
+          if (enableGyroOnGesture) {
+            window.removeEventListener("touchend", enableGyroOnGesture);
+            window.removeEventListener("click", enableGyroOnGesture);
+          }
         });
       } else {
         const onScroll = () => {
