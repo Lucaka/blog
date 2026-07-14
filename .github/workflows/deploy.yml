@@ -27,9 +27,9 @@ jobs:
           persist-credentials: false
 
       - name: Setup pnpm
+        # 版本由 package.json 的 "packageManager" 欄位決定，
+        # 此處不再指定 version，避免與其重複而觸發 ERR_PNPM_BAD_PM_VERSION
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node
         uses: actions/setup-node@v4
