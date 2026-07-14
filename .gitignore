@@ -1,1 +1,23 @@
-/node_modules
+# Build / deps
+node_modules
+dist
+server
+tmp
+lib
+lib-types
+
+# Qwik
+.qwik
+
+# Vite
+vite.config.ts.timestamp-*
+
+# Editor / OS
+.DS_Store
+*.local
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+npm-debug.log*

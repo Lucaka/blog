@@ -1,0 +1,72 @@
+/**
+ * RUINS // ARCHIVE — global styles
+ * Shared design tokens, resets and base typography.
+ * Component-specific styles live alongside their components (useStylesScoped$).
+ */
+
+/* === 1. 核心配色 === */
+:root {
+  --text-main: #2b302b;
+  --text-sub: #5a605a;
+  --accent-moss: #5c6b5b; /* 灰綠色 */
+  --accent-rust: #b56543; /* 鐵鏽紅 */
+  --gold-dust: #d4af37;
+}
+
+/* === 2. 基礎設定 === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #e1ded7; /* 頁面底色，避免背景圖跑完變白 */
+  color: var(--text-main);
+  font-family: "Space Mono", monospace;
+  overflow-x: hidden;
+  line-height: 1.8;
+  min-height: 250vh; /* 確保足夠長度展示視差 */
+}
+
+/**
+ * 自訂游標：只有在游標元件掛載、且是有指標裝置時才隱藏系統游標。
+ * 避免 JS 尚未載入時游標完全消失，也讓觸控裝置維持正常行為。
+ */
+@media (hover: hover) and (pointer: fine) {
+  body.custom-cursor-active,
+  body.custom-cursor-active * {
+    cursor: none;
+  }
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: 0.3s;
+}
+
+/* === 頁面佈局 === */
+.main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  /* 讓內容從畫面 45% 處開始，上方留白給廢墟背景 */
+  padding-top: 45vh;
+  padding-bottom: 100px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    padding-top: 35vh;
+  }
+}
